@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
@@ -37,7 +38,30 @@ fun testSharedFlow() {
     Thread.sleep(2000)
 }
 
+fun testSharedState() {
+    val sharedNumbersFlow = flow {
+        (1..5).forEach {
+            run {
+                delay(100)
+                emit(it)
+            }
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, 0)
+
+    Thread.sleep(1000)
+    scope.launch {
+        sharedNumbersFlow.collect { println("flow 1: $it ${OffsetDateTime.now()}") }
+    }
+    Thread.sleep(3000)
+
+    scope.launch {
+        sharedNumbersFlow.collect { println("flow 2: $it ${OffsetDateTime.now()}") }
+    }
+    Thread.sleep(2000)
+}
+
 fun main(args: Array<String>) {
-    runBlocking { testSharedFlow() }
+//    testSharedFlow()
+    testSharedState()
 
 }
